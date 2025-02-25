@@ -27,6 +27,7 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.IDToken
+import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.launch
@@ -43,13 +44,25 @@ val supabase = createSupabaseClient(
 
 suspend fun signUpWithEmail(email: String, password: String, context: android.content.Context) {
     try {
-        supabase.auth.signUpWith(Email) {
+//        val result =
+            supabase.auth.signUpWith(Email) {
             this.email = email
             this.password = password
         }
-        Toast.makeText(context, "Sign-up successful!", Toast.LENGTH_SHORT).show()
+
+//        val userInfo: UserInfo? = auth.retrieveUserForCurrentSession()
+//
+//        // Check if email is verified
+//        if (userInfo?.emailConfirmedAt == null) {
+//            Toast.makeText(context, "Check your email to verify your account.", Toast.LENGTH_LONG).show()
+//        } else {
+//            Toast.makeText(context, "Sign-up successful!", Toast.LENGTH_SHORT).show()
+//        }
+
+//        Toast.makeText(context, "Sign-up successful!", Toast.LENGTH_SHORT).show()
+
     } catch (e: Exception) {
-        Toast.makeText(context, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+//        Toast.makeText(context, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
     }
 }
 
@@ -159,11 +172,11 @@ fun GenderDropdown(selectedGender: String, onGenderSelected: (String) -> Unit) {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            DropdownMenuItem(text = { Text("Male", color = Color.Black) }, onClick = {
+            DropdownMenuItem(text = { Text("Male", color = Color.White) }, onClick = {
                 onGenderSelected("Male")
                 expanded = false
             })
-            DropdownMenuItem(text = { Text("Female", color = Color.Black) }, onClick = {
+            DropdownMenuItem(text = { Text("Female", color = Color.White) }, onClick = {
                 onGenderSelected("Female")
                 expanded = false
             })
@@ -189,8 +202,8 @@ fun CityDropdown(selectedCity: String, onCitySelected: (String) -> Unit) {
                 .fillMaxWidth()
                 .menuAnchor(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,   // Text appears white after selection
-                unfocusedTextColor = Color.White, // Text remains white when not focused
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
                 focusedBorderColor = Color.White,
                 unfocusedBorderColor = Color.Gray,
                 cursorColor = Color.White
@@ -200,7 +213,7 @@ fun CityDropdown(selectedCity: String, onCitySelected: (String) -> Unit) {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            DropdownMenuItem(text = { Text("Delhi", color = Color.Black) }, onClick = {
+            DropdownMenuItem(text = { Text("Delhi", color = Color.White) }, onClick = {
                 onCitySelected("Delhi")
                 expanded = false
             })

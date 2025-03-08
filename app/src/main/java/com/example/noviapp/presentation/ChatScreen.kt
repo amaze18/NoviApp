@@ -1,45 +1,39 @@
 package com.example.noviapp.presentation
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import java.text.SimpleDateFormat
-import java.util.*
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
-import retrofit2.http.Body
-import retrofit2.http.Headers
-import retrofit2.http.POST
+import com.example.noviapp.modal.Message
+import com.example.noviapp.viewModel.ChatViewModel
 
 @Composable
 fun ChatScreen(chatViewModel: ChatViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFFFDE2E4), Color(0xFFFAD0E4))
+                )
+            )
     ) {
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -58,29 +52,51 @@ fun ChatBubble(message: Message) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(horizontal = 10.dp, vertical = 4.dp),
         horizontalArrangement = if (message.isSent) Arrangement.End else Arrangement.Start
     ) {
-        Column {
+        Column(
+            modifier = Modifier
+                .widthIn(max = LocalConfiguration.current.screenWidthDp.dp * 0.75f)
+        ) {
             Box(
                 modifier = Modifier
-                    .background(
-                        if (message.isSent) Color(0xFF6200EE) else Color.DarkGray,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(12.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color.Transparent)
+                    .padding(horizontal = 18.dp, vertical = 12.dp)
             ) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Color.White.copy(alpha = 0.2f))
+                        .blur(15.dp)
+                )
+
                 Text(
-                    text = message.text,
-                    color = Color.White,
-                    fontSize = 16.sp
+                    text = message.text.trim(),
+                    color = Color.Black,
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.padding(6.dp)
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(message.timestamp, color = Color.Gray, fontSize = 12.sp)
+            Text(
+                text = message.timestamp,
+                color = Color(0xFFFF70E1),
+                fontSize = 12.sp,
+                textAlign = TextAlign.End,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(end = 8.dp)
+            )
         }
     }
 }
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,27 +106,43 @@ fun MessageInput(chatViewModel: ChatViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .background(Color.Black),
+            .padding(10.dp)
+            .background(Color.Transparent),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TextField(
-            value = message,
-            onValueChange = { message = it },
-            placeholder = { Text("Type your message...") },
+        Box(
             modifier = Modifier
                 .weight(1f)
-                .background(Color.DarkGray, RoundedCornerShape(16.dp)),
-            colors = TextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedContainerColor = Color.DarkGray,
-                unfocusedContainerColor = Color.DarkGray,
-                cursorColor = Color.White
+                .clip(RoundedCornerShape(25.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFFFFE0F7), Color(0xFFFFC3FA))
+                    )
+                )
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+        ) {
+            TextField(
+                value = message,
+                onValueChange = { message = it },
+                placeholder = { Text("Type your message...", color = Color.Gray) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 40.dp, max = 120.dp)
+                    .verticalScroll(rememberScrollState()),
+                colors = TextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    cursorColor = Color.Black
+                ) ,
+                 textStyle = TextStyle(color = Color.Black),
+                maxLines = 5
             )
-        )
+        }
 
         Spacer(modifier = Modifier.width(8.dp))
+
         Button(
             onClick = {
                 if (message.isNotBlank()) {
@@ -118,117 +150,19 @@ fun MessageInput(chatViewModel: ChatViewModel) {
                     message = ""
                 }
             },
-            modifier = Modifier.size(50.dp),
-            shape = CircleShape,
-            colors = ButtonDefaults.buttonColors(Color(0xFF6200EE))
-        ) {
-            Icon(Icons.Default.Send, contentDescription = "Send", tint = Color.White)
-        }
-    }
-}
-
-@Preview
-@Composable
-fun PreviewChatScreen() {
-    ChatScreen()
-}
-
-class ChatViewModel : ViewModel() {
-    var messages = mutableStateListOf<Message>()
-        private set
-
-    fun sendMessage(userQuery: String) {
-        if (userQuery.isBlank()) return
-
-        val timestamp = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
-        messages.add(Message(userQuery, true, timestamp))
-
-        // ✅ Generate Request Time in Correct Format
-        val dateFormat = SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z (zzzz)", Locale.ENGLISH)
-        val requestTime = dateFormat.format(Date())
-
-        val request = ChatRequest(
-            message = userQuery,
-            email = "singewartanmay@gmail.com",
-            bot_id = "delhi_mentor_male",
-            previous_conversation = messages.map {
-                ChatMessage(
-                    if (it.isSent) "user" else "assistant",
-                    it.text
+            modifier = Modifier
+                .clip(RoundedCornerShape(50.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFFFF70E1), Color(0xFFFFA781))
+                    )
                 )
-            },
-            request_time = requestTime,
-            bot_prompt = "You are my best friend!"
-        )
-
-        // ✅ Debugging: Log request payload
-        Log.d("ChatViewModel", "Request Payload: ${Gson().toJson(request)}")
-
-        viewModelScope.launch {
-            RetrofitClient.instance.sendQuery(request).enqueue(object : Callback<ChatResponse> {
-                override fun onResponse(
-                    call: Call<ChatResponse>,
-                    response: Response<ChatResponse>
-                ) {
-                    if (response.isSuccessful) {
-                        val botReply = response.body()?.response ?: "No response"
-                        messages.add(Message(botReply, false, timestamp))
-                    } else {
-                        val errorMsg = response.errorBody()?.string() ?: "Unknown error"
-                        messages.add(Message("Error: $errorMsg", false, timestamp))
-                        Log.e("ChatViewModel", "Server Error: $errorMsg")
-                    }
-                }
-
-                override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
-                    messages.add(Message("Failed to reach server!", false, timestamp))
-                    Log.e("ChatViewModel", "Network Error: ${t.message}")
-                }
-            })
+                .size(80.dp, 40.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            contentPadding = ButtonDefaults.ContentPadding
+        ) {
+            Text("Send", color = Color.White)
         }
     }
 }
 
-
-
-object RetrofitClient {
-    private const val BASE_URL = "https://walrus-app-htefl.ondigitalocean.app/"
-
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
-
-    val instance: ChatApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(ChatApiService::class.java)
-    }
-}
-
-
-
-interface ChatApiService {
-    @Headers("Content-Type: application/json")
-    @POST("cv/chat")
-    fun sendQuery(@Body request: ChatRequest): Call<ChatResponse>
-}
-
-
-data class Message(val text: String, val isSent: Boolean, val timestamp: String)
-data class ChatMessage(val role: String, val content: String)
-
-data class ChatRequest(
-    val message: String,
-    val email: String,
-    val bot_id: String,
-    val previous_conversation: List<ChatMessage>,
-    val request_time: String,
-    val bot_prompt: String
-)
-
-data class ChatResponse(val response: String, val message_id: Int, val reminder: Boolean)

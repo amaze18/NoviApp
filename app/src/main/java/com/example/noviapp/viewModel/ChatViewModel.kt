@@ -1,9 +1,12 @@
 package com.example.noviapp.viewModel
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.noviapp.chatDatabase.ChatDatabase
+import com.example.noviapp.chatDatabase.ChatEntity
 import com.example.noviapp.modal.ChatMessage
 import com.example.noviapp.modal.ChatRequest
 import com.example.noviapp.modal.ChatResponse
@@ -19,15 +22,47 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(application: Application) : AndroidViewModel(application) {
     var messages = mutableStateListOf<Message>()
         private set
+
+    private val chatDao = ChatDatabase.getDatabase(application).chatDao()
+
+    var currentBotName: String = "delhi_mentor_male"
+        private set
+
+
+    fun setCurrentBot(botName: String) {
+        currentBotName = botName
+        loadChatHistory(botName)
+    }
+
+    private fun loadChatHistory(botName: String) {
+        viewModelScope.launch {
+            val savedMessages = chatDao.getMessagesForBot(botName)
+            messages.clear()
+            messages.addAll(savedMessages.map { Message(it.text, it.isSent, it.timestamp) })
+        }
+    }
 
     fun sendMessage(userQuery: String) {
         if (userQuery.isBlank()) return
 
         val timestamp = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
-        messages.add(Message(userQuery, true, timestamp))
+        val userMessage = Message(userQuery, true, timestamp)
+        messages.add(userMessage)
+
+        // Save user message to Room with the current bot name
+        viewModelScope.launch {
+            chatDao.insertMessage(
+                ChatEntity(
+                    text = userQuery,
+                    isSent = true,
+                    timestamp = timestamp,
+                    botName = currentBotName
+                )
+            )
+        }
 
         val dateFormat = SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z (zzzz)", Locale.ENGLISH)
         val requestTime = dateFormat.format(Date())
@@ -49,7 +84,6 @@ class ChatViewModel : ViewModel() {
             bot_prompt = botPrompt
         )
 
-
         Log.d("ChatViewModel", "Request Payload: ${Gson().toJson(request)}")
 
         viewModelScope.launch {
@@ -60,19 +94,68 @@ class ChatViewModel : ViewModel() {
                 ) {
                     if (response.isSuccessful) {
                         val botReply = response.body()?.response ?: "No response"
-                        messages.add(Message(botReply, false, timestamp))
+                        val botMessage = Message(botReply, false, timestamp)
+                        messages.add(botMessage)
+
+                        // Save bot message with the current bot name
+                        viewModelScope.launch {
+                            chatDao.insertMessage(
+                                ChatEntity(
+                                    text = botReply,
+                                    isSent = false,
+                                    timestamp = timestamp,
+                                    botName = currentBotName
+                                )
+                            )
+                        }
                     } else {
                         val errorMsg = response.errorBody()?.string() ?: "Unknown error"
-                        messages.add(Message("Error: $errorMsg", false, timestamp))
+                        val errorMessage = Message("Error: $errorMsg", false, timestamp)
+                        messages.add(errorMessage)
+
+                        // Save error message to Room with current bot name
+                        viewModelScope.launch {
+                            chatDao.insertMessage(
+                                ChatEntity(
+                                    text = "Error: $errorMsg",
+                                    isSent = false,
+                                    timestamp = timestamp,
+                                    botName = currentBotName
+                                )
+                            )
+                        }
+
                         Log.e("ChatViewModel", "Server Error: $errorMsg")
                     }
                 }
 
                 override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
-                    messages.add(Message("Failed to reach server!", false, timestamp))
+                    val errorMessage = "Failed to reach server!"
+                    messages.add(Message(errorMessage, false, timestamp))
+
+                    // Save network failure message to Room with current bot name
+                    viewModelScope.launch {
+                        chatDao.insertMessage(
+                            ChatEntity(
+                                text = errorMessage,
+                                isSent = false,
+                                timestamp = timestamp,
+                                botName = currentBotName
+                            )
+                        )
+                    }
+
                     Log.e("ChatViewModel", "Network Error: ${t.message}")
                 }
             })
+        }
+    }
+
+    // Clear messages for the current bot
+    fun clearChat() {
+        viewModelScope.launch {
+            chatDao.clearChatHistoryForBot(currentBotName)
+            messages.clear()
         }
     }
 }

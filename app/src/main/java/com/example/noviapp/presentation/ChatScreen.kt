@@ -1,6 +1,8 @@
 package com.example.noviapp.presentation
 
+import BackgroundBlobs
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,8 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -22,30 +26,45 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.noviapp.modal.Message
+import com.example.noviapp.trialUi.AnimatedBotMessageText
 import com.example.noviapp.viewModel.ChatViewModel
 
 @Composable
-fun ChatScreen(chatViewModel: ChatViewModel = viewModel()) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFFFDE2E4), Color(0xFFFAD0E4))
-                )
-            )
+fun ChatScreen(botName: String?, chatViewModel: ChatViewModel = viewModel()) {
+    val currentBot = botName ?: "delhi_mentor_male"
+
+    LaunchedEffect(currentBot) {
+        chatViewModel.setCurrentBot(currentBot)
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            reverseLayout = false
+        BackgroundBlobs()
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            items(chatViewModel.messages) { message ->
-                ChatBubble(message)
+            Text(
+                text = "Chatting with: $currentBot",
+                fontSize = 20.sp,
+                modifier = Modifier.padding(16.dp),
+                color = Color.Black
+            )
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                reverseLayout = false
+            ) {
+                items(chatViewModel.messages) { message ->
+                    ChatBubble(message)
+                }
             }
+            MessageInput(chatViewModel)
         }
-        MessageInput(chatViewModel)
     }
 }
+
+
+
 
 @Composable
 fun ChatBubble(message: Message) {
@@ -62,24 +81,32 @@ fun ChatBubble(message: Message) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color.Transparent)
-                    .padding(horizontal = 18.dp, vertical = 12.dp)
-            ) {
+                    .background(Color.White.copy(alpha = 0.3f))
+                    .border(
+                        width = 2.dp,
+                        color = Color.White.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(24.dp)
+                    ).padding(horizontal = 5.dp, vertical = 5.dp)
+                    .shadow(
+                        elevation = 50.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = Color.Transparent,
+                        spotColor = Color.Transparent
+                    )
+            ){
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .clip(RoundedCornerShape(28.dp))
-                        .background(Color.White.copy(alpha = 0.2f))
-                        .blur(15.dp)
+                        .blur(10.dp)
                 )
-
                 Text(
                     text = message.text.trim(),
                     color = Color.Black,
-                    fontSize = 16.sp,
+                    fontSize = 20.sp,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.padding(6.dp)
                 )
+//                AnimatedBotMessageText(message = message.text.trim())
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -94,8 +121,6 @@ fun ChatBubble(message: Message) {
         }
     }
 }
-
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,13 +138,19 @@ fun MessageInput(chatViewModel: ChatViewModel) {
         Box(
             modifier = Modifier
                 .weight(1f)
-                .clip(RoundedCornerShape(25.dp))
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(Color(0xFFFFE0F7), Color(0xFFFFC3FA))
-                    )
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color.White.copy(alpha = 0.5f))
+                .border(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(24.dp)
+                ).padding(horizontal = 5.dp, vertical = 5.dp)
+                .shadow(
+                    elevation = 50.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color.White.copy(alpha = 0.5f),
+                    spotColor = Color.White.copy(alpha = 0.5f)
                 )
-                .padding(horizontal = 16.dp, vertical = 4.dp)
         ) {
             TextField(
                 value = message,

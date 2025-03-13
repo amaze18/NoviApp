@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -182,13 +183,14 @@ fun MessageInput(chatViewModel: ChatViewModel) {
                 }
             },
             modifier = Modifier
-                .clip(RoundedCornerShape(50.dp))
+                .clip(RoundedCornerShape(25.dp))
                 .background(
                     Brush.horizontalGradient(
                         listOf(Color(0xFFFF70E1), Color(0xFFFFA781))
                     )
                 )
-                .size(80.dp, 40.dp),
+                .size(80.dp, 40.dp)
+                .padding(5.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = ButtonDefaults.ContentPadding
         ) {

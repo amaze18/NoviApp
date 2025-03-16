@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.noviapp.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -66,9 +68,10 @@ suspend fun signUpWithEmail(email: String, password: String, context: android.co
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginPage() {
+fun LoginPage(navController: NavController) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -94,16 +97,12 @@ fun LoginPage() {
 
         CustomTextField(value = name, onValueChange = { name = it }, label = "Enter your name")
         Spacer(modifier = Modifier.height(8.dp))
-
         CustomTextField(value = email, onValueChange = { email = it }, label = "Enter email")
         Spacer(modifier = Modifier.height(8.dp))
-
         CustomTextField(value = password, onValueChange = { password = it }, label = "Enter password")
         Spacer(modifier = Modifier.height(8.dp))
-
         GenderDropdown(selectedGender = gender, onGenderSelected = { gender = it })
         Spacer(modifier = Modifier.height(8.dp))
-
         CityDropdown(selectedCity = city, onCitySelected = { city = it })
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -111,6 +110,8 @@ fun LoginPage() {
             onClick = {
                 coroutineScope.launch {
                     signUpWithEmail(email, password, context)
+                    // After login, navigate to BotScreen.
+                    navController.navigate("bot")
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
@@ -119,11 +120,11 @@ fun LoginPage() {
         ) {
             Text(text = "Continue →", color = Color.White, fontSize = 16.sp)
         }
-
         Spacer(modifier = Modifier.height(16.dp))
         GoogleSignInButton()
     }
 }
+
 
 @Composable
 fun CustomTextField(value: String, onValueChange: (String) -> Unit, label: String) {
@@ -294,9 +295,9 @@ fun GoogleSignInButton() {
 
 }
 
-
 @Preview
 @Composable
 fun PreviewLoginPage() {
-    LoginPage()
+    val navController = rememberNavController()
+    LoginPage(navController)
 }

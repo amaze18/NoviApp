@@ -2,7 +2,10 @@ package com.example.noviapp.viewModel
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.noviapp.chatDatabase.ChatDatabase
@@ -26,11 +29,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     var messages = mutableStateListOf<Message>()
         private set
 
+    // New state to track whether the bot is typing
+    var isBotTyping by mutableStateOf(false)
+        private set
+
     private val chatDao = ChatDatabase.getDatabase(application).chatDao()
 
     var currentBotName: String = "delhi_mentor_male"
         private set
-
 
     fun setCurrentBot(botName: String) {
         currentBotName = botName
@@ -64,11 +70,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
+        // Set the typing indicator on
+        isBotTyping = true
+
         val dateFormat = SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z (zzzz)", Locale.ENGLISH)
         val requestTime = dateFormat.format(Date())
 
         val botId = "delhi_mentor_male"
-        val (selectedBotId, botPrompt) = BotConfigRepository.getBotConfig(botId) ?: ("default_bot" to "Default bot prompt")
+        val (selectedBotId, botPrompt) = BotConfigRepository.getBotConfig(botId)
+            ?: ("default_bot" to "Default bot prompt")
 
         val request = ChatRequest(
             message = userQuery,
@@ -92,6 +102,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     call: Call<ChatResponse>,
                     response: Response<ChatResponse>
                 ) {
+                    // Disable typing indicator once a response is received
+                    isBotTyping = false
+
                     if (response.isSuccessful) {
                         val botReply = response.body()?.response ?: "No response"
                         val botMessage = Message(botReply, false, timestamp)
@@ -130,6 +143,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
+                    // Disable typing indicator on failure as well
+                    isBotTyping = false
+
                     val errorMessage = "Failed to reach server!"
                     messages.add(Message(errorMessage, false, timestamp))
 

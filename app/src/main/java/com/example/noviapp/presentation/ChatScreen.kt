@@ -148,6 +148,18 @@ fun ChatScreen(
 
             }
             MessageInput(chatViewModel)
+            Spacer(modifier = Modifier.height(2.dp))
+            Box( modifier = Modifier
+                .padding(2.dp)
+                .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ){
+                Text(
+                    text = "Novi Ai can still make mistakes its constantly learning from you, please be kind !!" ,
+                    textAlign = TextAlign.Center,
+                    fontSize = 16.sp
+                )
+            }
         }
     }
 }
@@ -171,7 +183,7 @@ fun ChatBubble(message: Message) {
         ) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(bubbleColor)
                     .border(
                         width = 2.dp,

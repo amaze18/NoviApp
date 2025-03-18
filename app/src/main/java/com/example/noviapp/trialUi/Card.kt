@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,11 +54,12 @@ fun AnimatedTestimonials(
         }
     }
 
-    // Create a soft pink-to-peach vertical gradient.
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFFFFE5E9),
-            Color(0xFFE17A9E)
+            Color(0xFFF472B6).copy(alpha=0.4f),
+            Color(0xFFFDBA74).copy(alpha=0.4f),
+            Color(0xFFFDBA74).copy(alpha=0.4f),
+            Color(0xFFF472B6).copy(alpha=0.4f)
         )
     )
 
@@ -69,7 +71,7 @@ fun AnimatedTestimonials(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Animated Image Area (on top)
+
         Box(
             modifier = Modifier
                 .size(width = 280.dp, height = 300.dp)
@@ -129,13 +131,20 @@ fun AnimatedTestimonials(
             val testimonial = testimonials[activeIndex]
             Text(
                 text = testimonial.name,
-                fontSize = 24.sp,
+                fontSize = 28.sp,
                 color = Color.White
             )
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "${testimonial.persona}, ${testimonial.location}",
-                fontSize = 14.sp,
-                color = Color.Gray
+                text = "${testimonial.location}",
+                fontSize = 18.sp,
+                color = Color(0xFF444040)
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Gender : ${testimonial.gender}",
+                fontSize = 18.sp,
+                color = Color(0xFF444040)
             )
             Spacer(modifier = Modifier.height(16.dp))
             AnimatedTestimonialText(persona = testimonial.persona)
@@ -189,7 +198,7 @@ fun AnimatedTestimonials(
 
 @Composable
 fun AnimatedTestimonialText(persona: String) {
-    val words = persona.split(" ")
+    val words = persona.split("  ")
     val revealed = remember { mutableStateListOf<Boolean>() }
     LaunchedEffect(persona) {
         revealed.clear()
@@ -203,9 +212,10 @@ fun AnimatedTestimonialText(persona: String) {
         words.forEachIndexed { i, word ->
             AnimatedVisibility(visible = revealed.getOrNull(i) == true) {
                 Text(
-                    text = "$word ",
-                    fontSize = 16.sp,
-                    color = Color.LightGray
+                    text = "Persona : $word ",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF3F3838)
                 )
             }
         }
@@ -219,9 +229,9 @@ fun GradientButton(
 ) {
     val buttonGradient = Brush.horizontalGradient(
         colors = listOf(
-            Color(0xFFE192AD),
-            Color(0xFFDC427A),
-            Color(0xFFE7A435)
+            Color(0xFFB98BE8),
+            Color(0xFFEC82A6),
+            Color(0xFFF5B178),
         )
     )
 
